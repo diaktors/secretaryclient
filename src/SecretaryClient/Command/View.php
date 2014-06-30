@@ -4,10 +4,25 @@ namespace SecretaryClient\Command;
 
 use SecretaryClient\Helper;
 use SecretaryClient\Client;
+use SecretaryCrypt\Crypt;
 use Symfony\Component\Console;
 
-class view extends Base
+class View extends Base
 {
+    /**
+     * @var Crypt
+     */
+    private $cryptService;
+
+    /**
+     * @param Crypt $cryptService
+     */
+    public function __construct(Crypt $cryptService)
+    {
+        $this->cryptService = $cryptService;
+        parent::__construct();
+    }
+
     protected function configure()
     {
         $this
@@ -59,7 +74,7 @@ class view extends Base
                 });
         $passphrase = $helper->ask($input, $output, $question);
 
-        $noteDecrypted = $this->decrypt(
+        $noteDecrypted = $this->cryptService->decrypt(
             $note['content'],
             $note['eKey'],
             file_get_contents($config['privateKeyPath']),
@@ -89,45 +104,5 @@ class view extends Base
         unset($noteDecrypted);
 
         return;
-    }
-
-    /**
-     * Decrypt string with private key
-     *
-     * @param  string $content
-     * @param  string $eKey
-     * @param  string $key
-     * @param  string $passphrase
-     * @return string
-     * @throws \InvalidArgumentException If content, ekey, key or passphrase is empty
-     * @throws \LogicException           If key is not readable as key
-     * @throws \LogicException           If encryption errors
-     */
-    public function decrypt($content, $eKey, $key, $passphrase)
-    {
-        if (empty($content)) {
-            throw new \InvalidArgumentException('Content canot be empty');
-        }
-        if (empty($eKey)) {
-            throw new \InvalidArgumentException('eKey canot be empty');
-        }
-        if (empty($key)) {
-            throw new \InvalidArgumentException('Key canot be empty');
-        }
-        if (empty($passphrase)) {
-            throw new \InvalidArgumentException('Passphrase canot be empty');
-        }
-        $pk = openssl_pkey_get_private($key, $passphrase);
-        if (false === $pk) {
-            throw new \LogicException('Key is not readable');
-        }
-        $content = base64_decode($content);
-        $eKey    = base64_decode($eKey);
-        $check   = openssl_open($content, $contentDecrypted, $eKey, $pk);
-        openssl_free_key($pk);
-        if (false === $check) {
-            throw new \LogicException(openssl_error_string());
-        }
-        return unserialize($contentDecrypted);
     }
 }

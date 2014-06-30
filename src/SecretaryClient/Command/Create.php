@@ -4,10 +4,25 @@ namespace SecretaryClient\Command;
 
 use SecretaryClient\Helper;
 use SecretaryClient\Client;
+use SecretaryCrypt\Crypt;
 use Symfony\Component\Console;
 
 class Create extends Base
 {
+    /**
+     * @var Crypt
+     */
+    private $cryptService;
+
+    /**
+     * @param Crypt $cryptService
+     */
+    public function __construct(Crypt $cryptService)
+    {
+        $this->cryptService = $cryptService;
+        parent::__construct();
+    }
+
     protected function configure()
     {
         $this
@@ -63,7 +78,7 @@ class Create extends Base
         $helper = $this->getHelperSet()->get('editor');
         $content = $helper->useEditor($output);
 
-        $contentWithKey = $this->encryptForSingleKey($content, $this->config['publicKey']);
+        $contentWithKey = $this->cryptService->encryptForSingleKey($content, $this->config['publicKey']);
         unset($content);
 
         $config = $this->getConfiguration();
@@ -80,38 +95,5 @@ class Create extends Base
         $output->writeln('Note with ID: ' . $note['id'] . ' was created.');
 
         return;
-    }
-
-    /**
-     * Encrypt string with public key
-     *
-     * @param  string $content          Content to encrypt
-     * @param  string $key              Public key
-     * @return array
-     * @throws \InvalidArgumentException If key is empty
-     * @throws \LogicException           If key is not readable as key
-     * @throws \LogicException           If encryption errors
-     */
-    public function encryptForSingleKey($content, $key)
-    {
-        if (empty($key)) {
-            throw new \InvalidArgumentException('Key cannot be empty');
-        }
-        $pk = openssl_pkey_get_public($key);
-        if (false === $pk) {
-            throw new \LogicException('Key is not readable');
-        }
-        $pubKey    = openssl_pkey_get_details($pk);
-        $sealCheck = openssl_seal(serialize($content), $sealedContent, $eKeys, array($pubKey['key']));
-        openssl_free_key($pk);
-        unset($pubKey);
-        unset($content);
-        if (false === $sealCheck) {
-            throw new \LogicException('An error occurred while encrypting');
-        }
-        return array(
-            'ekey'    => base64_encode($eKeys[0]),
-            'content' => base64_encode($sealedContent)
-        );
     }
 }
