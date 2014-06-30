@@ -1,0 +1,42 @@
+{
+    "name": "wesrc/secretaryclient",
+    "description": "SecretaryClient - (cli) client for communication with SecretaryApi",
+    "type": "application",
+    "license": "MIT",
+    "homepage": "http://github.com/wesrc/secretaryclient",
+    "authors": [
+        {
+            "name": "Michael Scholl",
+            "email": "michael@wesrc.com"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/wesrc/secretarycrypt.git"
+        }
+    ],
+    "autoload": {
+        "psr-0": {
+            "SecretaryClient": "src"
+        },
+        "classmap": []
+    },
+    "require": {
+        "php": ">=5.3.23",
+        "symfony/console": "v2.5.0",
+        "guzzlehttp/guzzle": "4.*",
+        "sensiolabs/security-checker": "v1.3.3",
+        "wesrc/secretarycrypt" : "~0.1"
+    },
+    "require-dev": {
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "vendor/bin/security-checker security:check"
+         ],
+        "post-update-cmd": [
+            "vendor/bin/security-checker security:check"
+        ]
+    }
+}
