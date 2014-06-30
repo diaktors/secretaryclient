@@ -67,10 +67,16 @@ class Configuration extends Base
         $question = new Console\Question\Question('Your wished tmp dir (default /tmp/): ', '/tmp/');
         $tmpDir = $helper->ask($input, $output, $question);
 
-        $question = new Console\Question\Question('Your private key file path: ', '/Users/mischosch/Desktop/keys/mykey.pem');
+        $question = new Console\Question\Question('Your private key file path (/complete/path/to/mykey.private): ');
+        $question->setValidator(function ($answer) {
+            if (empty($answer)) {
+                throw new \InvalidArgumentException('You need to provide a key file path');
+            }
+            return $answer;
+        });
         $privateKeyPath = $helper->ask($input, $output, $question);
 
-        $question = new Console\Question\Question('Your secretary url: ', 'http://secretaryapi.dev:8080/');
+        $question = new Console\Question\Question('Your secretary url: ', 'https://secretary.dev:8080/');
         $apiUrl = $helper->ask($input, $output, $question);
 
         $output->writeln("\nGiven username: " . $username);
