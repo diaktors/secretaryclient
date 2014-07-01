@@ -16,20 +16,18 @@ class Note extends Base
      * @param string $title
      * @param string $content
      * @param string $eKey
-     * @param int $userId
      * @return array
      *
      * @throws \LogicException
      */
-    public function create($private, $title, $content, $eKey, $userId)
+    public function create($private, $title, $content, $eKey)
     {
         $response = $this->client->post($this->apiUrl . $this->noteEndpoint, [
             'body' => [
                 'title' => $title,
                 'content' => $content,
                 'private' => $private,
-                'eKey' => $eKey,
-                'userId' => $userId
+                'eKey' => $eKey
             ]
         ]);
 
@@ -42,17 +40,15 @@ class Note extends Base
 
     /**
      * @param int $noteId
-     * @param int $userId
      * @return array
      */
-    public function get($noteId, $userId)
+    public function get($noteId)
     {
         $listUrl = sprintf(
-            '%s%s/%d/user/%d',
+            '%s%s/%d',
             $this->apiUrl,
             $this->noteEndpoint,
-            $noteId,
-            $userId
+            $noteId
         );
 
         try {
@@ -60,6 +56,10 @@ class Note extends Base
         } catch (GuzzleHttp\Exception\RequestException $e) {
             if ($e->getResponse()->getStatusCode() == 404) {
                 $this->error = 'Note could not been found.';
+                return false;
+            }
+            if ($e->getResponse()->getStatusCode() == 403) {
+                $this->error = 'You are not allowed to view this note.';
                 return false;
             }
             $this->error = $e->getMessage();
@@ -77,12 +77,11 @@ class Note extends Base
     /**
      * @param int $page
      * @param int $group
-     * @param int $userId
      * @return array
      *
      * @throws \LogicException
      */
-    public function listNotes($page = 1, $group, $userId)
+    public function listNotes($page = 1, $group)
     {
         $buildQuery = [
             'orderBy' => ['id' => 'asc'],
@@ -113,12 +112,11 @@ class Note extends Base
      * @param string $search
      * @param int $page
      * @param int $group
-     * @param int $userId
      * @return array
      *
      * @throws \LogicException
      */
-    public function searchNotes($search, $page = 1, $group, $userId)
+    public function searchNotes($search, $page = 1, $group)
     {
         $buildQuery = [
             'orderBy' => ['id' => 'asc'],

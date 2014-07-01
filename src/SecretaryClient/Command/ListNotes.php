@@ -55,7 +55,7 @@ class ListNotes extends Base
         $client = $this->getClient('note', $config);
         if (!empty($search)) {
             $output->writeln('You searched for: ' . $search);
-            $notes = $client->searchNotes($search, $page, $group, $config['userId']);
+            $notes = $client->searchNotes($search, $page, $group);
         } else {
             $notes = $client->listNotes($page, $group, $config['userId']);
         }

@@ -88,8 +88,7 @@ class Create extends Base
             $private,
             $title,
             $contentWithKey['content'],
-            $contentWithKey['ekey'],
-            $config['userId']
+            $contentWithKey['ekey']
         );
 
         $output->writeln('Note with ID: ' . $note['id'] . ' was created.');
