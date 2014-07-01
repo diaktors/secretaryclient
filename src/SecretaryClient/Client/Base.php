@@ -43,7 +43,7 @@ abstract class Base
             'base_url' => $this->apiUrl,
             'defaults' => [
                 'headers' => ['accept' => 'application/json'],
-                //'auth' => ['user', 'pass'],
+                'auth' => [$username, $password],
             ]
         ]);
         $this->username = $username;
