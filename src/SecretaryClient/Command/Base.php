@@ -7,9 +7,15 @@ use Symfony\Component\Console;
 
 abstract class Base extends Console\Command\Command
 {
+    /**
+     * @var null|array
+     */
     protected $config = null;
 
-    protected $availableClients = ['note', 'user', 'key'];
+    /**
+     * @var array
+     */
+    protected $availableClients = ['note', 'user', 'key', 'group'];
 
     /**
      * Check if configuration is already done - or trigger it
