@@ -60,6 +60,11 @@ class ListNotes extends Base
             $notes = $client->listNotes($page, $group, $config['userId']);
         }
 
+        if ($client->hasError()) {
+            $output->writeln(sprintf('<error>%s</error>', $client->getError()));
+            return;
+        }
+
         if ($notes['count'] == 0) {
             $output->writeln('No note records given.');
             return;

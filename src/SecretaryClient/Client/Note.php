@@ -22,14 +22,19 @@ class Note extends Base
      */
     public function create($private, $title, $content, $eKey)
     {
-        $response = $this->client->post($this->apiUrl . $this->noteEndpoint, [
-            'body' => [
-                'title' => $title,
-                'content' => $content,
-                'private' => $private,
-                'eKey' => $eKey
-            ]
-        ]);
+        try {
+            $response = $this->client->post($this->apiUrl . $this->noteEndpoint, [
+                'body' => json_encode([
+                    'title' => $title,
+                    'content' => $content,
+                    'private' => $private,
+                    'eKey' => $eKey
+                ])
+            ]);
+        } catch (GuzzleHttp\Exception\RequestException $e) {
+            $this->error = $e->getMessage();
+            return false;
+        }
 
         if ($response->getStatusCode() != 201) {
             throw new \LogicException('An error occurred while saving the note.');
@@ -99,7 +104,13 @@ class Note extends Base
             $this->noteEndpoint,
             http_build_query($buildQuery)
         );
-        $response = $this->client->get($listUrl);
+
+        try {
+            $response = $this->client->get($listUrl);
+        } catch (GuzzleHttp\Exception\RequestException $e) {
+            $this->error = $e->getMessage();
+            return false;
+        }
 
         if ($response->getStatusCode() != 200) {
             throw new \LogicException('An error occurred while querying note list.');
@@ -135,7 +146,13 @@ class Note extends Base
             $this->noteEndpoint,
             http_build_query($buildQuery)
         );
-        $response = $this->client->get($listUrl);
+
+        try {
+            $response = $this->client->get($listUrl);
+        } catch (GuzzleHttp\Exception\RequestException $e) {
+            $this->error = $e->getMessage();
+            return false;
+        }
 
         if ($response->getStatusCode() != 200) {
             throw new \LogicException('An error occurred while querying note list.');
