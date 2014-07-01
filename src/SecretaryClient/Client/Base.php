@@ -42,7 +42,7 @@ abstract class Base
         $this->client = new GuzzleHttp\Client([
             'base_url' => $this->apiUrl,
             'defaults' => [
-                'headers' => ['accept' => 'application/json'],
+                'headers' => ['accept' => 'application/json', 'content-type' => 'application/json'],
                 'auth' => [$username, $password],
             ]
         ]);
