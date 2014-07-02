@@ -12,33 +12,66 @@ class Group extends Base
     private $groupEndpoint = '/api/group';
 
     /**
-     * @param int $userId
-     * @throws \LogicException If api error occurred
+     * @param int $groupId
      * @return array
      */
-    public function get($userId)
+    public function get($groupId)
+    {
+        $getUrl = sprintf(
+            '%s/%d',
+            $this->groupEndpoint,
+            $groupId
+        );
+
+        try {
+            $response = $this->client->get($getUrl);
+        } catch (GuzzleHttp\Exception\RequestException $e) {
+            $this->error = $e->getMessage();
+            return false;
+        }
+
+        if ($response->getStatusCode() != 200) {
+            $this->error = 'An error occurred while querying group record.';
+            return false;
+        }
+
+        return $response->json();
+    }
+
+    /**
+     * @return array
+     */
+    public function getUserGroups()
     {
         $buildQuery = [
             'orderBy' => ['id' => 'asc'],
             //'page' => $page
         ];
-        if (!empty($group)) {
-            $buildQuery['query'] = [
-                ['field' => 'users', 'value' => $userId, 'type' => 'eq'],
-            ];
-        }
 
         $getUrl = sprintf(
             '%s?%s',
             $this->groupEndpoint,
             http_build_query($buildQuery)
         );
-        $response = $this->client->get($getUrl);
 
-        if ($response->getStatusCode() != 200) {
-            throw new \LogicException('An error occurred while querying group list.');
+        try {
+            $response = $this->client->get($getUrl);
+        } catch (GuzzleHttp\Exception\RequestException $e) {
+            $this->error = $e->getMessage();
+            return false;
         }
 
-        return $response->json();
+        if ($response->getStatusCode() != 200) {
+            $this->error = 'An error occurred while querying group list.';
+            return false;
+        }
+
+        $responseData = $response->json();
+        if ($responseData['count'] == 0) {
+            $this->error = 'No group available, create a private note';
+            return;
+        }
+
+        return $responseData;
     }
 }
