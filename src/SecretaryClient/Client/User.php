@@ -22,9 +22,8 @@ class User extends Base
             $this->userEndpoint,
             $userId
         );
-        $response = $this->client->get($getUrl);
 
-        return $this->checkResponseForUser($response);
+        return $this->doGetRequest($getUrl);
     }
 
     /**
@@ -42,26 +41,65 @@ class User extends Base
                 ]
             ])
         );
-        $response = $this->client->get($getUrl);
 
-        return $this->checkResponseForUser($response);
+        return $this->doGetRequest($getUrl);
     }
 
     /**
-     * @param GuzzleHttp\Message\ResponseInterface $response
+     * @param array $userIds
      * @return array
-     * @throws \RuntimeException If api error occurred
-     * @throws \LogicException   If no user was found
      */
-    private function checkResponseForUser(GuzzleHttp\Message\ResponseInterface $response)
+    public function getUsers(array $userIds)
     {
+        $userQuery = ['query' => []];
+        foreach ($userIds as $userId) {
+            $userQuery['query'][] = ['field' => 'id', 'value' => $userId, 'where' => 'or', 'type' => 'eq'];
+        }
+        $getUrl = sprintf(
+            '%s?%s',
+            $this->userEndpoint,
+            http_build_query($userQuery)
+        );
+
+        try {
+            $response = $this->client->get($getUrl);
+        } catch (GuzzleHttp\Exception\RequestException $e) {
+            $this->error = $e->getMessage();
+            return false;
+        }
+
         if ($response->getStatusCode() != 200) {
-            throw new \RuntimeException('An error occurred while fetching the user.');
+            $this->error = 'An error occurred while fetching the user.';
+            return false;
+        }
+
+        $responseData = $response->json();
+
+        return $responseData['_embedded']['user'];
+    }
+
+    /**
+     * @param string $url
+     * @return array
+     */
+    private function doGetRequest($url)
+    {
+        try {
+            $response = $this->client->get($url);
+        } catch (GuzzleHttp\Exception\RequestException $e) {
+            $this->error = $e->getMessage();
+            return false;
+        }
+
+        if ($response->getStatusCode() != 200) {
+            $this->error = 'An error occurred while fetching the user.';
+            return false;
         }
 
         $responseData = $response->json();
         if ($responseData['count'] == 0) {
-            throw new \LogicException('User does not exists.');
+            $this->error = 'User does not exists.';
+            return false;
         }
 
         return $responseData['_embedded']['user'][0];
