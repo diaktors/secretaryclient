@@ -20,7 +20,7 @@ class Note extends Base
      *
      * @throws \LogicException
      */
-    public function create($private, $title, $content, $eKey)
+    public function createPrivateNote($private, $title, $content, $eKey)
     {
         try {
             $response = $this->client->post($this->apiUrl . $this->noteEndpoint, [
@@ -37,7 +37,45 @@ class Note extends Base
         }
 
         if ($response->getStatusCode() != 201) {
-            throw new \LogicException('An error occurred while saving the note.');
+            $this->error = 'An error occurred while saving the note.';
+            return false;
+        }
+
+        return $response->json();
+    }
+
+    /**
+     * @param int $private
+     * @param string $title
+     * @param string $content
+     * @param int $groupId
+     * @param array $encryptData
+     * @param array $users
+     * @return array
+     *
+     * @throws \LogicException
+     */
+    public function createGroupNote($private, $title, $content, $groupId, array $encryptData, array $users)
+    {
+        try {
+            $response = $this->client->post($this->apiUrl . $this->noteEndpoint, [
+                'body' => json_encode([
+                    'private' => $private,
+                    'title' => $title,
+                    'content' => $content,
+                    'groupId' => $groupId,
+                    'encryptData' => $encryptData,
+                    'users' => $users
+                ])
+            ]);
+        } catch (GuzzleHttp\Exception\RequestException $e) {
+            $this->error = $e->getMessage();
+            return false;
+        }
+
+        if ($response->getStatusCode() != 201) {
+            $this->error = 'An error occurred while saving the note.';
+            return false;
         }
 
         return $response->json();
@@ -113,7 +151,8 @@ class Note extends Base
         }
 
         if ($response->getStatusCode() != 200) {
-            throw new \LogicException('An error occurred while querying note list.');
+            $this->error = 'An error occurred while querying note list.';
+            return false;
         }
 
         return $response->json();
@@ -155,7 +194,8 @@ class Note extends Base
         }
 
         if ($response->getStatusCode() != 200) {
-            throw new \LogicException('An error occurred while querying note list.');
+            $this->error = 'An error occurred while querying note list.';
+            return false;
         }
 
         return $response->json();
