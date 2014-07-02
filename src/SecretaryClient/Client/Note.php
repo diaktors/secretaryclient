@@ -120,21 +120,18 @@ class Note extends Base
     /**
      * @param int $page
      * @param int $group
+     * @param null|int $private
      * @return array
      *
      * @throws \LogicException
      */
-    public function listNotes($page = 1, $group)
+    public function listNotes($page = 1, $group, $private = null)
     {
         $buildQuery = [
             'orderBy' => ['id' => 'asc'],
             'page' => $page
         ];
-        if (!empty($group)) {
-            $buildQuery['query'] = [
-                ['field' => 'group', 'value' => $group, 'type' => 'eq'],
-            ];
-        }
+        $buildQuery = $this->buildQuery($buildQuery, $group, $private);
 
         $listUrl = sprintf(
             '%s%s?%s',
@@ -161,12 +158,13 @@ class Note extends Base
     /**
      * @param string $search
      * @param int $page
-     * @param int $group
+     * @param null|int $group
+     * @param null|int $private
      * @return array
      *
      * @throws \LogicException
      */
-    public function searchNotes($search, $page = 1, $group)
+    public function searchNotes($search, $page = 1, $group, $private = null)
     {
         $buildQuery = [
             'orderBy' => ['id' => 'asc'],
@@ -175,9 +173,7 @@ class Note extends Base
                 ['field' => 'title', 'value' => '%' . $search . '%', 'where' => 'and', 'type' => 'like'],
             ]
         ];
-        if (!empty($group)) {
-            $buildQuery['query'][] = ['field' => 'group', 'value' => $group, 'where' => 'and', 'type' => 'eq'];
-        }
+        $buildQuery = $this->buildQuery($buildQuery, $group, $private);
 
         $listUrl = sprintf(
             '%s%s?%s',
@@ -199,5 +195,33 @@ class Note extends Base
         }
 
         return $response->json();
+    }
+
+    /**
+     * @param array $buildQuery
+     * @param null|int $group
+     * @param null|int $private
+     * @return array
+     */
+    private function buildQuery(array $buildQuery, $group, $private)
+    {
+        if (!empty($group)) {
+            $groupQuery = ['field' => 'group', 'value' => $group, 'where' => 'and', 'type' => 'eq'];
+            if (isset($buildQuery['query'])) {
+                $buildQuery['query'][] = $groupQuery;
+            } else {
+                $buildQuery['query'] = [$groupQuery];
+            }
+        }
+        if (is_numeric($private)) {
+            $privateQuery = ['field' => 'private', 'value' => $private, 'where' => 'and', 'type' => 'eq'];
+            if (isset($buildQuery['query'])) {
+                $buildQuery['query'][] = $privateQuery;
+            } else {
+                $buildQuery['query'] = [$privateQuery];
+            }
+        }
+
+        return $buildQuery;
     }
 }

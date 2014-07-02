@@ -31,6 +31,12 @@ class ListNotes extends Base
                 Console\Input\InputOption::VALUE_OPTIONAL,
                 'Filter group only results.'
             )
+            ->addOption(
+                'private',
+                null,
+                Console\Input\InputOption::VALUE_OPTIONAL,
+                'Filter private only results.'
+            )
         ;
     }
 
@@ -45,6 +51,7 @@ class ListNotes extends Base
 
         $search = $input->getOption('search');
         $group = $input->getOption('group');
+        $private = $input->getOption('private');
         $page = (int) $input->getOption('page');
         if (empty($page)) {
             $page = 1;
@@ -55,9 +62,9 @@ class ListNotes extends Base
         $client = $this->getClient('note', $config);
         if (!empty($search)) {
             $output->writeln('You searched for: ' . $search);
-            $notes = $client->searchNotes($search, $page, $group);
+            $notes = $client->searchNotes($search, $page, $group, $private);
         } else {
-            $notes = $client->listNotes($page, $group, $config['userId']);
+            $notes = $client->listNotes($page, $group, $private);
         }
 
         if ($client->hasError()) {
@@ -89,11 +96,11 @@ class ListNotes extends Base
 
         foreach ($notes['_embedded']['note'] as $note) {
             $group = '';
-            if (isset($note['_embedded']['group'])) {
+            if (!empty($note['groupId'])) {
                 $group = sprintf(
                     '%s (%d)',
-                    $note['_embedded']['group']['name'],
-                    $note['_embedded']['group']['id']
+                    $note['groupName'],
+                    $note['groupId']
                 );
             }
             $table->addRow([
