@@ -22,27 +22,24 @@ class Key extends Base
             $this->keyEndpoint,
             $userId
         );
-        $response = $this->client->get($getUrl);
+        try {
+            $response = $this->client->get($getUrl);
+        } catch (GuzzleHttp\Exception\RequestException $e) {
+            $this->error = $e->getMessage();
+            return false;
+        }
 
-        return $this->checkResponseForkey($response);
-    }
-
-    /**
-     * @param GuzzleHttp\Message\ResponseInterface $response
-     * @return array
-     * @throws \RuntimeException If api error occurred
-     * @throws \LogicException   If no key was found
-     */
-    private function checkResponseForKey(GuzzleHttp\Message\ResponseInterface $response)
-    {
         if ($response->getStatusCode() != 200) {
-            throw new \RuntimeException('An error occurred while fetching the user.');
+            $this->error = 'An error occurred while fetching the user.';
+            return false;
         }
 
         $responseData = $response->json();
         if (empty($responseData['pubKey'])) {
-            throw new \LogicException('Key does not exists.');
+            $this->error = 'Key does not exists.';
+            return false;
         }
+
 
         return $responseData['pubKey'];
     }
