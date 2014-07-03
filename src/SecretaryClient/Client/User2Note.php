@@ -33,45 +33,49 @@ namespace SecretaryClient\Client;
 use GuzzleHttp;
 
 /**
- * Key Client
+ * User2Note Client
  */
-class Key extends Base
+class User2Note extends Base
 {
     /**
      * @var string
      */
-    private $keyEndpoint = '/api/key';
+    private $user2noteEndpoint = '/api/user2note';
 
     /**
      * @param int $userId
-     * @return string
+     * @param int $noteId
+     * @param string $eKey
+     * @param bool $owner
+     * @param bool $readPermission
+     * @param bool $writePermission
+     * @return array
+     *
+     * @throws \LogicException
      */
-    public function getById($userId)
+    public function createUser2Note($userId, $noteId, $eKey, $owner, $readPermission, $writePermission)
     {
-        $getUrl = sprintf(
-            '%s/%d',
-            $this->keyEndpoint,
-            $userId
-        );
         try {
-            $response = $this->client->get($getUrl);
+            $response = $this->client->post($this->apiUrl . $this->user2noteEndpoint, [
+                'body' => json_encode([
+                    'userId' => $userId,
+                    'noteId' => $noteId,
+                    'eKey' => $eKey,
+                    'owner' => $owner,
+                    'readPermission' => $readPermission,
+                    'writePermission' => $writePermission,
+                ])
+            ]);
         } catch (GuzzleHttp\Exception\RequestException $e) {
             $this->error = $e->getMessage();
             return false;
         }
 
-        if ($response->getStatusCode() != 200) {
-            $this->error = 'An error occurred while fetching the user.';
+        if ($response->getStatusCode() != 201) {
+            $this->error = 'An error occurred while saving the note.';
             return false;
         }
 
-        $responseData = $response->json();
-        if (empty($responseData['pubKey'])) {
-            $this->error = 'Key does not exists.';
-            return false;
-        }
-
-
-        return $responseData['pubKey'];
+        return $response->json();
     }
 }
