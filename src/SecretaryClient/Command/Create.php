@@ -107,6 +107,34 @@ class Create extends Base
     }
 
     /**
+     * @param array $users
+     * @param array $cryptUsers
+     * @return array
+     */
+    private function askForUsersWithPermissions(array &$users, array &$cryptUsers)
+    {
+        $userData = $this->getUserOfGroupValue($users);
+        $selectedUser = $userData['user'];
+        $selectedUserKey = $this->getUserPublicKey($selectedUser);
+
+        $cryptUser = [
+            'key' => $selectedUserKey,
+            'writePermission' => $userData['writePermission']
+        ];
+        $cryptUsers[$selectedUser] = $cryptUser;
+
+        unset($users[$selectedUser]);
+        if (!empty($users)) {
+            $continueCheck = $this->getContinueUserSelectionValue();
+            if ($continueCheck == 1) {
+                $this->askForUsersWithPermissions($users, $cryptUsers);
+            }
+        }
+
+        return $cryptUsers;
+    }
+
+    /**
      * @param string $title
      * @param string $content
      * @return array
@@ -117,16 +145,10 @@ class Create extends Base
         $selectedGroup = $groupData['group'];
         $groupUsers = $groupData['groupUsers'];
 
-        $userData = $this->getUserOfGroupValue($groupUsers, $selectedGroup);
-        $selectedUser = $userData['user'];
-        $selectedUserKey = $this->getUserPublicKey($selectedUser);
+        $cryptUsersWithKeys = $this->getUserSelection($groupUsers, $selectedGroup);
+        $cryptKeys = $this->createUserKeyArray($cryptUsersWithKeys);
 
-        $cryptUserKeys = [
-            $selectedUser => $selectedUserKey,
-            $this->config['userId'] => $this->config['publicKey'],
-        ];
-
-        $contentWithKey = $this->cryptService->encryptForMultipleKeys($content, $cryptUserKeys);
+        $contentWithKey = $this->cryptService->encryptForMultipleKeys($content, $cryptKeys);
         unset($content);
 
         /** @var Client\Note $client */
@@ -141,21 +163,18 @@ class Create extends Base
         /** @var Client\User2Note $client */
         $client = $this->getClient('user2note', $this->config);
         $i = 0;
-        foreach ($cryptUserKeys as $userId => $key) {
+        foreach ($cryptUsersWithKeys as $userId => $data) {
             $owner = false;
-            $readPermission = true;
-            $writePermission = false;
             if ($userId == $this->config['userId']) {
                 $owner = true;
-                $writePermission = true;
             }
             $client->createUser2Note(
                 $userId,
                 $note['id'],
                 $contentWithKey['ekeys'][$i],
                 $owner,
-                $readPermission,
-                $writePermission
+                true,
+                $data['writePermission']
             );
             $client->checkForError($client);
             $i++;
@@ -198,6 +217,20 @@ class Create extends Base
     }
 
     /**
+     * @param array $usersWithKey
+     * @return array
+     */
+    private function createUserKeyArray(array $usersWithKey)
+    {
+        $keys = [];
+        foreach ($usersWithKey as $user => $data) {
+            $keys[$user] = $data['key'];
+        }
+
+        return $keys;
+    }
+
+    /**
      * @param array $collection
      * @return array
      */
@@ -237,6 +270,27 @@ class Create extends Base
         }
 
         return $users;
+    }
+
+    /**
+     * @return int
+     */
+    private function getContinueUserSelectionValue()
+    {
+        $question = new Console\Question\ChoiceQuestion(
+            'Select another user?',
+            array('no', 'yes'),
+            0
+        );
+        $question->setErrorMessage('Answer %s is invalid.');
+        $continue = $this->askQuestion($question);
+
+        $action = 1;
+        if($continue == 'no') {
+            $action = 0;
+        }
+
+        return $action;
     }
 
     /**
@@ -303,9 +357,9 @@ class Create extends Base
     /**
      * @param array $groupUsers
      * @param int $selectedGroup
-     * @return array with values `group` and `groupUsers`
+     * @return array
      */
-    private function getUserOfGroupValue($groupUsers, $selectedGroup)
+    private function getGroupUser($groupUsers, $selectedGroup)
     {
         /** @var Client\User $userClient */
         $userClient = $this->getClient('user', $this->config);
@@ -314,13 +368,38 @@ class Create extends Base
 
         $users = $this->extractUserNames($groupUsersData);
         unset($users[$this->config['userId']]);
+
+        return $users;
+    }
+
+
+
+    /**
+     * @param array $users
+     * @return array with values `user` and `writePermission`
+     */
+    private function getUserOfGroupValue(array $users)
+    {
         $question = new Console\Question\ChoiceQuestion('Select a user:', $users);
         $selectedUserName = $this->askQuestion($question);
         $flippedUsers = array_flip($users);
 
+        $question = new Console\Question\ChoiceQuestion(
+            'Should user get write permission?',
+            array('no', 'yes'),
+            0
+        );
+        $question->setErrorMessage('Answer %s is invalid.');
+        $answer = $this->askQuestion($question);
+
+        $writePermission = false;
+        if($answer == 'yes') {
+            $writePermission = true;
+        }
+
         return [
             'user' => $flippedUsers[$selectedUserName],
-            'users' => $users,
+            'writePermission' => $writePermission,
         ];
     }
 
@@ -336,5 +415,24 @@ class Create extends Base
         $keyClient->checkForError($keyClient);
 
         return $userKey;
+    }
+
+    /**
+     * @param array $groupUsers
+     * @param int $group
+     * @return array
+     */
+    private function getUserSelection(array $groupUsers, $group)
+    {
+        $users = $this->getGroupUser($groupUsers, $group);
+
+        $cryptUsers= [];
+        $cryptUsers = $this->askForUsersWithPermissions($users, $cryptUsers);
+        $cryptUsers[$this->config['userId']] = [
+            'key' => $this->config['publicKey'],
+            'writePermission' => true
+        ];
+
+        return $cryptUsers;
     }
 }

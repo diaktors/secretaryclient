@@ -61,9 +61,9 @@ class User2Note extends Base
                     'userId' => $userId,
                     'noteId' => $noteId,
                     'eKey' => $eKey,
-                    'owner' => $owner,
-                    'readPermission' => $readPermission,
-                    'writePermission' => $writePermission,
+                    'owner' => (int) $owner,
+                    'readPermission' => (int) $readPermission,
+                    'writePermission' => (int) $writePermission,
                 ])
             ]);
         } catch (GuzzleHttp\Exception\RequestException $e) {
