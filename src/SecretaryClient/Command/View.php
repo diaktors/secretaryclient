@@ -32,28 +32,13 @@ namespace SecretaryClient\Command;
 
 use SecretaryClient\Helper;
 use SecretaryClient\Client;
-use SecretaryCrypt\Crypt;
 use Symfony\Component\Console;
 
 /**
  * View Command
  */
-class View extends Base
+class View extends NoteBase
 {
-    /**
-     * @var Crypt
-     */
-    private $cryptService;
-
-    /**
-     * @param Crypt $cryptService
-     */
-    public function __construct(Crypt $cryptService)
-    {
-        $this->cryptService = $cryptService;
-        parent::__construct();
-    }
-
     /**
      * Configure view command
      */
@@ -105,52 +90,6 @@ class View extends Base
         unset($noteDecrypted);
 
         return;
-    }
-
-    /**
-     * @param array $note
-     * @param string $passphrase
-     * @return string
-     */
-    private function decryptNote(array $note, $passphrase)
-    {
-        return $this->cryptService->decrypt(
-            $note['content'],
-            $note['eKey'],
-            file_get_contents($this->config['privateKeyPath']),
-            $passphrase
-        );
-    }
-
-    /**
-     * @param int $noteId
-     * @return array
-     */
-    private function getNote($noteId)
-    {
-        /** @var Client\Note $client */
-        $client = $this->getClient('note', $this->config);
-        $note = $client->get($noteId, $this->config['userId']);
-        $client->checkForError();
-
-        return $note;
-    }
-
-    /**
-     * @return array
-     */
-    private function getPassphraseValue()
-    {
-        $question = new Console\Question\Question('Private Key Passphrase: ');
-        $question->setHidden(true)
-            ->setHiddenFallback(false)
-            ->setValidator(function ($answer) {
-                if (empty($answer)) {
-                    throw new \InvalidArgumentException('You need to provide a key passphrase value');
-                }
-                return $answer;
-            });
-        return $this->askQuestion($question);
     }
 
     /**
