@@ -38,22 +38,8 @@ use Symfony\Component\Console;
 /**
  * Create Command
  */
-class Create extends Base
+class Create extends NoteBase
 {
-    /**
-     * @var Crypt
-     */
-    private $cryptService;
-
-    /**
-     * @param Crypt $cryptService
-     */
-    public function __construct(Crypt $cryptService)
-    {
-        $this->cryptService = $cryptService;
-        parent::__construct();
-    }
-
     /**
      * Configure create command
      */
