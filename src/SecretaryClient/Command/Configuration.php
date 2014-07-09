@@ -66,7 +66,7 @@ class Configuration extends Base
     protected function execute(Console\Input\InputInterface $input, Console\Output\OutputInterface $output)
     {
         if (file_exists($this->configurationFile)) {
-            $output->writeln('You already configured your SecretaryClient.');
+            $output->writeln('<error>You already configured your SecretaryClient.</error>');
             return;
         }
 
@@ -118,7 +118,9 @@ class Configuration extends Base
             return;
         }
 
-        $output->writeln("\nYou successfully configured your SecretaryClient. You can now start using it.\n");
+        $output->writeln(
+            "\n<info>You successfully configured your SecretaryClient. You can now start using it</info>.\n"
+        );
 
         return;
     }

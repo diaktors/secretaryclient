@@ -110,7 +110,7 @@ class ListNotes extends Base
         }
 
         if ($notes['count'] == 0) {
-            $output->writeln('No note records given.');
+            $output->writeln('<error>No note records given.</error>');
             return;
         }
 

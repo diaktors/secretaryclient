@@ -87,7 +87,7 @@ class Create extends NoteBase
             return;
         }
 
-        $output->writeln('Note with ID: ' . $note['id'] . ' was created.');
+        $output->writeln('<info>Note with ID: ' . $note['id'] . ' was created.</info>');
 
         return;
     }
