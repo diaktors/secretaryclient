@@ -221,6 +221,42 @@ class Note extends Base
     }
 
     /**
+     * @param int $id
+     * @param string $title
+     * @param string $content
+     * @return array
+     *
+     * @throws \LogicException
+     */
+    public function updatePrivateNote($id, $title, $content)
+    {
+        $url = sprintf(
+            '%s%s/%d',
+            $this->apiUrl,
+            $this->noteEndpoint,
+            $id
+        );
+        try {
+            $response = $this->client->patch($url, [
+                'body' => json_encode([
+                    'title' => $title,
+                    'content' => $content,
+                ])
+            ]);
+        } catch (GuzzleHttp\Exception\RequestException $e) {
+            $this->error = $e->getMessage();
+            return false;
+        }
+
+        if ($response->getStatusCode() != 200) {
+            $this->error = 'An error occurred while updating the note.';
+            return false;
+        }
+
+        return $response->json();
+    }
+
+    /**
      * @param array $buildQuery
      * @param null|int $group
      * @param null|int $private
