@@ -404,20 +404,6 @@ class Create extends Base
     }
 
     /**
-     * @param int $userId
-     * @return string
-     */
-    private function getUserPublicKey($userId)
-    {
-        /** @var Client\Key $keyClient */
-        $keyClient = $this->getClient('key', $this->config);
-        $userKey = $keyClient->getById($userId);
-        $keyClient->checkForError($keyClient);
-
-        return $userKey;
-    }
-
-    /**
      * @param array $groupUsers
      * @param int $group
      * @return array
