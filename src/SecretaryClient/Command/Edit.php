@@ -40,7 +40,7 @@ use Symfony\Component\Console;
 class Edit extends NoteBase
 {
     /**
-     * Configure create command
+     * Configure edit command
      */
     protected function configure()
     {
@@ -119,7 +119,7 @@ class Edit extends NoteBase
             return;
         }
 
-        $output->writeln('Note with ID: ' . $note['id'] . ' was updated.');
+        $output->writeln('<info>Note with ID: ' . $note['id'] . ' was updated.</info>');
 
         unset($passphrase);
         unset($contentDecrypted);
@@ -204,8 +204,6 @@ class Edit extends NoteBase
 
         return $note;
     }
-
-
 
     /**
      * @param int $id
