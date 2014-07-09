@@ -108,6 +108,42 @@ class Note extends Base
      * @param int $noteId
      * @return array
      */
+    public function delete($noteId)
+    {
+        $listUrl = sprintf(
+            '%s%s/%d',
+            $this->apiUrl,
+            $this->noteEndpoint,
+            $noteId
+        );
+
+        try {
+            $response = $this->client->delete($listUrl);
+        } catch (GuzzleHttp\Exception\RequestException $e) {
+            if ($e->getResponse()->getStatusCode() == 404) {
+                $this->error = 'Note could not been found.';
+                return false;
+            }
+            if ($e->getResponse()->getStatusCode() == 403) {
+                $this->error = 'You are not allowed to delete this note.';
+                return false;
+            }
+            $this->error = $e->getMessage();
+            return false;
+        }
+
+        if ($response->getStatusCode() != 204) {
+            $this->error = 'An error occurred while deleting the note.';
+            return false;
+        }
+
+        return $response->json();
+    }
+
+    /**
+     * @param int $noteId
+     * @return array
+     */
     public function get($noteId)
     {
         $listUrl = sprintf(
