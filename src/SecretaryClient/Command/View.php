@@ -99,8 +99,8 @@ class View extends NoteBase
     {
         $question = new Console\Question\ChoiceQuestion(
             'Show note content in editor?',
-            array('yes', 'no'),
-            1
+            array('no', 'yes'),
+            0
         );
         $question->setErrorMessage('Answer %s is invalid.');
 
