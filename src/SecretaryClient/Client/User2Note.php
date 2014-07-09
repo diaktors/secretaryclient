@@ -78,4 +78,96 @@ class User2Note extends Base
 
         return $response->json();
     }
+
+    /**
+     * @param int $note
+     * @param int $page
+     * @return array
+     *
+     * @throws \LogicException
+     */
+    public function getNoteRecords($note, $page = 1)
+    {
+        $buildQuery = [
+            'orderBy' => ['userId' => 'asc'],
+            'page' => $page
+        ];
+        $buildQuery = $this->buildQuery($buildQuery, $note);
+
+        $url = sprintf(
+            '%s%s?%s',
+            $this->apiUrl,
+            $this->user2noteEndpoint,
+            http_build_query($buildQuery)
+        );
+
+        try {
+            $response = $this->client->get($url);
+        } catch (GuzzleHttp\Exception\RequestException $e) {
+            $this->error = $e->getMessage();
+            return false;
+        }
+
+        if ($response->getStatusCode() != 200) {
+            $this->error = 'An error occurred while querying note list.';
+            return false;
+        }
+
+        return $response->json();
+    }
+
+    /**
+     * @param int $userId
+     * @param int $noteId
+     * @param string $eKey
+     * @return array
+     *
+     * @throws \LogicException
+     */
+    public function updateUser2Note($userId, $noteId, $eKey)
+    {
+        $url = sprintf(
+            '%s%s/%d',
+            $this->apiUrl,
+            $this->user2noteEndpoint,
+            $noteId
+        );
+        try {
+            $response = $this->client->patch($url, [
+                'body' => json_encode([
+                    'userId' => $userId,
+                    'eKey' => $eKey,
+                ])
+            ]);
+        } catch (GuzzleHttp\Exception\RequestException $e) {
+            $this->error = $e->getMessage();
+            return false;
+        }
+
+        if ($response->getStatusCode() != 200) {
+            $this->error = 'An error occurred while saving the note.';
+            return false;
+        }
+
+        return $response->json();
+    }
+
+    /**
+     * @param array $buildQuery
+     * @param null|int $note
+     * @return array
+     */
+    private function buildQuery(array $buildQuery, $note)
+    {
+        if (!empty($note) && is_numeric($note)) {
+            $groupQuery = ['field' => 'noteId', 'value' => $note, 'where' => 'and', 'type' => 'eq'];
+            if (isset($buildQuery['query'])) {
+                $buildQuery['query'][] = $groupQuery;
+            } else {
+                $buildQuery['query'] = [$groupQuery];
+            }
+        }
+
+        return $buildQuery;
+    }
 }
