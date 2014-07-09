@@ -42,6 +42,7 @@ $cryptService = new Crypt();
 $application = new Application();
 $application->add(new Command\Configuration());
 $application->add(new Command\Create($cryptService));
+$application->add(new Command\Edit($cryptService));
 $application->add(new Command\ListNotes());
 $application->add(new Command\View($cryptService));
 $application->getHelperSet()->set($editorHelper, 'editor');
