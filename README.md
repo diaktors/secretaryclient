@@ -11,9 +11,15 @@ So, the cli tool is like a demonstration of what can be done using the API of [S
 
 ## Cli Tool
 
-Call ./client.php or ./client.php configure directly. Enter the details of your api. Start viewing/adding notes after.
+Call `./client.php` or `./client.php configure` directly. Enter the details of your api. Start viewing/adding notes after.
 
-Right now only creation of private notes is possible.
+## Available Commands
+- `./client.php configure`
+- `./client.php create`
+- `./client.php delete`
+- `./client.php edit`
+- `./client.php listNotes`
+- `./client.php view`
 
 ## Client library
 
